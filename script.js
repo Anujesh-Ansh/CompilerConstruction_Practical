@@ -16,13 +16,14 @@ const subjectData = {
     extern FILE *yyin;
 %}
 
+
 alpha [a-zA-Z]
 digit [0-9]
 comment "//".*
 keyword (if|else|for|while|switch|case|break|continue|return|int|float|double|string|boolean)
 identifier {alpha}({alpha}|{digit})*
-line [\\n]+
-space [ \\t]+
+line [\n]+
+space [ \t]+
 
 %%
 
@@ -46,22 +47,27 @@ int main(int argc, char *argv[]){
     if(l>0){
         l+=1;
     }
-    printf("Comments: %d\\n",c);
-    printf("Keywords: %d\\n",k);
-    printf("Identifiers: %d\\n",i);
-    printf("Lines: %d\\n",l);
-    printf("Spaces: %d\\n",s);
-    printf("Words: %d\\n",i+k+c);
+    printf("Comments: %d\n",c);
+    printf("Keywords: %d\n",k);
+    printf("Identifiers: %d\n",i);
+    printf("Lines: %d\n",l);
+    printf("Spaces: %d\n",s);
+    printf("Words: %d\n",i+k+c);
 
     fclose(fp);
     return 0;   
 }
     `,
 input: `
-int anujesh hello return 123 
-//commentif else for while switch 
-case break continue return 
-int float double string boolean
+asda
+asdas
+digit
+// hello
+bye 123
+1
+// see
+int
+for
 `,
         },
         {
@@ -77,7 +83,7 @@ start (A|a){alpha}
 
 %%
 {start} {count+=1;}
-.|\\n|\\t ;
+.|\n ;
 %%
 
 int yywrap(){
@@ -89,17 +95,20 @@ int main(int argc, char *argv[]){
     yyin = fp;
 
     yylex();
-    printf("Words:- %d \\n",count);
+    printf("Words:- %d \n",count);
 
     fclose(fp);
     return 0;
 }
     `,
 input: `
-int anujesh hello return 123 
-//commentif else for while switch 
-case break continue return 
-int float double string boolean
+hello
+hi
+ansh
+bye
+Ansh
+see Ansh
+1233232
 `,
         },
         {
@@ -111,14 +120,14 @@ int float double string boolean
 
 lower [a-z]
 upper [A-Z]
-space [ \\s]
+space [ \s]
 
 %%
 
 {lower} {printf("%c", yytext[0] - 32);}
 {upper} {printf("%c", yytext[0] + 32);}
-\\n {printf("\\n");}
-\\t {printf("\\t");}
+\n {printf("\n");}
+\t {printf("\t");}
 {space} {printf(" ");}
 . ;
 
@@ -139,10 +148,9 @@ int main(int argc, char *argv[]){
 }
     `,
 input: `
-int anujesh hello return 123 
-//commentif else for while switch 
-case break continue return 
-int float double string boolean
+hello
+Hi
+ByE HeLlO
 `,
         },
         {
@@ -173,6 +181,7 @@ NON_DIGIT [^0-9]+
         num = num / 16;
     } while (num != 0);
 
+    
     for (i = hex_index - 1; i >= 0; i--) {
         printf("%c", a[i]);
     }
@@ -193,17 +202,16 @@ int main(int argc, char *argv[]) {
     FILE *fp = fopen(argv[1], "r+");
     yyin = fp;
     yylex(); 
-    printf("\\n");
+    printf("\n");
     fclose(fp);
     return 0; 
 }
     `,
 
 input: `
-int anujesh hello return 123 
-//commentif else for while switch 
-case break continue return 
-int float double string boolean
+Anujesh 10
+12 Bye
+Bye10Bye
 `,
 
         },
@@ -217,12 +225,12 @@ int float double string boolean
 
 alpha [a-zA-Z]
 digit [0-9]
-symbol [^{alpha}{digit} \\t\\n\\s]
+symbol [^{alpha}{digit} \t\n]
 content ({alpha}|{digit}|{symbol})+".com"
 
 %%
 {content} {count++;}
-.|\\n|\\t ;
+.|\n ;
 %%
 int yywrap(){
     return 1;
@@ -231,88 +239,131 @@ int main(int argc, char *argv[]){
     FILE *fp = fopen(argv[1],"r+");
     yyin = fp;
     yylex();
-    printf("Count:- %d\\n",count);
+    printf("Count:- %d\n",count);
+    fclose(fp);
+    return 0;
+
+}
+    `,
+input: `
+anujesh@gmail.com
+a.com
+bye bye.com
+see u soon.com
+comasdasdasdasdasdGmain@gmail.com
+asd
+@.com
+`,
+        },
+
+        {
+            question: "Postfix Expression Evaluation YACC.",
+            code: `
+            
+            `,
+            input: `
+            
+            `,
+            },
+        
+            {
+                question: "Desk Calculator with Error Recovery YACC.",
+                code: `
+                
+                `,
+                input: `
+                
+                `,
+                },
+
+                {
+                    question: "For Loop Syntax Checking YACC.",
+                    code: `
+                    
+                    `,
+                    input: `
+                    
+                    `,
+                    },
+
+                    {
+                        question: "Intermediate Code Generation YACC.",
+                        code: `
+                        
+                        `,
+                        input: `
+                        
+                        `,
+                        },
+
+
+// // Format of the Code Snippet
+{
+question: "LEX program to implement a simple calculator.",
+code: `
+
+`,
+input: `
+
+`,
+},
+
+
+
+
+        {
+            question: "LEX program to check a valid email address.",
+            code: `
+%{
+    int count = 0;
+    extern FILE *yyin;
+%}
+
+alpha [a-zA-Z]
+digit [0-9]
+symbol [._&+%'!~#-]
+end (in|com|org|edu|eu|ru)
+
+%%
+({alpha}|{digit})+({symbol}|{alpha}|{digit})*"@"{alpha}+({alpha}|{digit}|-)*"."{end} { count++; }
+%%
+
+int yywrap() {
+    return 1;
+}
+
+int main(int argc, char *argv[]){
+    FILE *fp = fopen(argv[1],"r+");
+    yyin = fp;
+    yylex();
+    printf("count:- %d\n",count);
     fclose(fp);
     return 0;
 }
     `,
 input: `
-int anujesh hello return 123 
-//commentif else for while switch 
-case break continue return 
-int float double string boolean
+anshanujesh@gmail.com
+john.doe@gmail.com
+user123@example.com
+name_surname@yahoo.com
+info@my-site.org
+john..doe@gmail.com
+user@.com
+name@domain..com
+$user@gmail.com
+user@domain.com!
+example@domain@domain.com
+name@domain.c
+user@domain#example.com
+first.last@sub.domain.com
+123456@gmail.com
+example+filter@gmail.com
 `,
-        }
+        },
     ]
 };
 
 
-
-
-// // Render the running codes and questions with copy buttons
-// function renderPageContent() {
-//     const runningCodesContainer = document.getElementById("running-codes");
-//     const questionsContainer = document.getElementById("questions-container");
-
-//     // Render running codes
-//     subjectData.runningCodes.forEach(codeObj => {
-//         // Use the specific keys (first, second, third) to create code snippets
-//         for (const key in codeObj) {
-//             if (codeObj.hasOwnProperty(key)) {
-//                 // Create a code snippet with the key as the label
-//                 runningCodesContainer.appendChild(createCodeSnippet(codeObj[key], key));
-//             }
-//         }
-//     });
-
-//     // Render questions
-//     subjectData.questions.forEach((item, index) => {
-//         const questionDiv = document.createElement("div");
-//         questionDiv.innerHTML = `<h2>Question ${index + 1}: <span>${item.question}</span></h2>`;
-        
-//         questionDiv.appendChild(createCodeSnippet(item.code, "lex.l"));
-//         questionDiv.appendChild(createCodeSnippet(item.input, "input.txt"));
-        
-//         questionsContainer.appendChild(questionDiv);
-//     });
-// }
-
-// // Helper function to create a code snippet element with a copy button
-// function createCodeSnippet(content, label) {
-//     const container = document.createElement("div");
-//     const pre = document.createElement("pre");
-//     const codeElem = document.createElement("code");
-//     codeElem.textContent = content;
-
-//     const copyBtn = document.createElement("button");
-//     copyBtn.textContent = "Copy";
-//     copyBtn.className = "copy-btn";
-//     copyBtn.onclick = () => handleCopy(content, copyBtn);
-
-//     container.innerHTML = `<strong>${label}:</strong>`;
-//     pre.appendChild(codeElem);
-//     pre.appendChild(copyBtn);
-//     container.appendChild(pre);
-    
-//     return container;
-// }
-
-// // Copy code to clipboard and change button state
-// function handleCopy(text, button) {
-//     navigator.clipboard.writeText(text).then(() => {
-//         button.textContent = "Copied";
-//         button.style.backgroundColor = "#3a3d40";
-//         setTimeout(() => {
-//             button.textContent = "Copy";
-//             button.style.backgroundColor = "#238636";
-//         }, 2000);
-//     }).catch(err => {
-//         console.error("Failed to copy text: ", err);
-//     });
-// }
-
-// // Initialize page content
-// document.addEventListener("DOMContentLoaded", renderPageContent);
 
 // Render the running codes and questions with copy buttons
 function renderPageContent() {
