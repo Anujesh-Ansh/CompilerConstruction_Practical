@@ -3,8 +3,11 @@ const subjectData = {
     runningCodes: [
         {
         first: "lex lex.l",
+        either: "yacc -d yacc.y",
         second: "gcc lex.yy.c",
+        duplicate: "gcc lex.yy.c y.tab.c",
         third: "./a.out input.txt",
+
         }
     ],
     questions: [
