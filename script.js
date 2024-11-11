@@ -636,10 +636,62 @@ char* pop() {
 {
 question: "LEX program to implement a simple calculator.",
 code: `
+%{
+#include "y.tab.h"
+#include <stdio.h>
+#include <stdlib.h>
+%}
+
+%%
+[0-9]+ {yylval = atoi(yytext); return NUM;}
+[-+*/] {return yytext[0];}
+\ n {return '\ n';} //remove space
+. ;
+%%
+
+int yywrap(){
+    return 1;
+}
 
 `,
 input: `
+%{
+#include <stdio.h>
+#include <stdlib.h>
 
+int yylex();
+void yyerror(const char *s);
+
+%}
+
+%token NUM
+
+%left '+' '-'
+%left '*' '/'
+
+%%
+S : E '\ n' {printf("Result = %d\ n",$1);exit(0);} //remove space
+  | error '\ n' {yyerror("invalid, try again."); yyerrok;} //remove space
+  ;
+
+E : E '+' E {$$ = $1 + $3;}
+  | E '-' E {$$ = $1 - $3;}
+  | E '*' E {$$ = $1 * $3;}
+  | E '/' E {$$ = $1 / $3;}
+  | NUM {$$ = $1;}
+  ;
+%%
+
+void yyerror(const char *s){
+    printf("Error:- %s\ n",s); //remove space
+    exit(1);
+}
+
+int main(){
+    printf("Enter Expression:- ");
+    yyparse();
+    return 0;
+}
 `,
 },
 
@@ -696,7 +748,7 @@ example+filter@gmail.com
 `,
         },
         {
-            question: "Infix to Postfix",
+            question: "Postfix to Infix Conversion YACC.",
             code: `
 %{
 #include <stdio.h>
@@ -794,6 +846,108 @@ int main() {
     yyparse();
     return 0;
 }
+
+`,
+        },
+        {
+            question: "Infix to Postfix Conversion YACC.",
+            code: `
+%{
+#include "y.tab.h"
+#include <stdlib.h>
+#include <string.h>
+
+char buffer[100];
+%}
+
+ALPHA [A-Z a-z]
+DIGIT [0-9]
+
+%%
+{ALPHA}({ALPHA}|{DIGIT})*   { yylval.str = strdup(yytext); return ID; }
+{DIGIT}+                    { yylval.str = strdup(yytext); return ID; }
+[\ n \ t]                     ; //remove space
+.                           { yylval.str = strdup(yytext); return yytext[0]; }
+%%
+
+int yywrap() { return 1; }
+
+    `,
+input: `
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int yylex();
+void yyerror(const char *s);
+
+void A1(char *op);
+void A2();
+void A3(char *operand);
+
+char stack[100][100];
+int stack_top = 0;
+
+void yyerror(const char *s);
+%}
+
+%union {
+    char *str;
+}
+
+%token <str> ID
+%left '+' '-'
+%left '*' '/'
+%left UMINUS
+
+%%
+
+S    :    E        { printf("\ n"); } //remove space
+      ;
+
+E    :    E '+' { A1("+"); } T { A2(); }
+      |    E '-' { A1("-"); } T { A2(); }
+      |    T
+      ;
+
+T    :    T '*' { A1("*"); } F { A2(); }
+      |    T '/' { A1("/"); } F { A2(); }
+      |    F
+      ;
+
+F    :    '(' E ')'       { A2(); }
+      |    '-' F          { A1("-"); }
+      |    ID             { A3($1); }
+      ;
+
+%%
+
+void A1(char *op) {
+    strcpy(stack[stack_top++], op);
+}
+
+void A2() {
+
+    printf("%s", stack[--stack_top]);
+}
+
+void A3(char *operand) {
+
+    printf("%s", operand);
+    free(operand); 
+}
+
+int main() {
+    printf("Enter infix expression: ");
+    yyparse();
+    return 0;
+}
+
+void yyerror(const char *s) {
+    printf("Error: %s\ n", s); //remove space
+}
+
 
 `,
         },
