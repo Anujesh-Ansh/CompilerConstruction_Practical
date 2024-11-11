@@ -25,8 +25,8 @@ digit [0-9]
 comment "//".*
 keyword (if|else|for|while|switch|case|break|continue|return|int|float|double|string|boolean)
 identifier {alpha}({alpha}|{digit})*
-line [\n]+
-space [ \t]+
+line [\ n]+ // remove space
+space [ \ t]+ // remove space
 
 %%
 
@@ -51,12 +51,12 @@ int main(int argc, char *argv[]){
     if(l>0){
         l+=1;
     }
-    printf("Comments: %d\n",c);
-    printf("Keywords: %d\n",k);
-    printf("Identifiers: %d\n",i);
-    printf("Lines: %d\n",l);
-    printf("Spaces: %d\n",s);
-    printf("Words: %d\n",i+k+c);
+    printf("Comments: %d",c);
+    printf("Keywords: %d",k);
+    printf("Identifiers: %d",i);
+    printf("Lines: %d",l);
+    printf("Spaces: %d",s);
+    printf("Words: %d",i+k+c);
 
     fclose(fp);
     return 0;   
@@ -87,7 +87,7 @@ start (A|a){alpha}
 
 %%
 {start} {count+=1;}
-.|\n ;
+.|\ n ; // remove space
 %%
 
 int yywrap(){
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]){
     yyin = fp;
 
     yylex();
-    printf("Words:- %d \n",count);
+    printf("Words:- %d",count);
 
     fclose(fp);
     return 0;
@@ -124,7 +124,7 @@ see Ansh
 
 lower [a-z]
 upper [A-Z]
-space [ \s]
+space [ \ s] // remove space
 
 %%
 
@@ -266,14 +266,14 @@ asd
 
 digit   [0-9]+
 %%
-{digit}    { yylval = atoi(yytext); return NUMBER; }
+{digit}    { yylval = atoi(yytext); return NUM; }
 "+"        { return PLUS; }
 "-"        { return MINUS; }
 "*"        { return MULTIPLY; }
 "/"        { return DIVIDE; }
-\n         { return EOL; }
-[ \t]      ; /* ignore whitespace */
-.          ; /* ignore any other character */
+\ n         { return EOL; } // remove space
+[ \ t]      ;  // remove space
+.          ;
 %%
 
 int yywrap() {
@@ -293,19 +293,19 @@ int pop();
 int stack[100], sp = 0;
 %}
 
-%token NUMBER
+%token NUM
 %token PLUS MINUS MULTIPLY DIVIDE EOL
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
 %%
-S: expr EOL { printf("= %d\n", pop()); }
+S: E EOL { printf("= %d\n", pop()); }
       ;
 
-expr: NUMBER          { push($1); }
-    | expr expr PLUS    { int b = pop(); int a = pop(); push(a + b); }
-    | expr expr MINUS   { int b = pop(); int a = pop(); push(a - b); }
-    | expr expr MULTIPLY { int b = pop(); int a = pop(); push(a * b); }
-    | expr expr DIVIDE  { int b = pop(); int a = pop(); push(a / b); }
+E: NUM          { push($1); }
+    | E E PLUS    { int b = pop(); int a = pop(); push(a + b); }
+    | E E MINUS   { int b = pop(); int a = pop(); push(a - b); }
+    | E E MULTIPLY { int b = pop(); int a = pop(); push(a * b); }
+    | E E DIVIDE  { int b = pop(); int a = pop(); push(a / b); }
     ;
 %%
 
@@ -317,17 +317,17 @@ int pop() {
     if (sp > 0) {
         return stack[--sp];
     } else {
-        yyerror("Error: Stack underflow\n");
+        yyerror("Error: Stack underflow");
         exit(1);
     }
 }
 
 void yyerror(const char *s) {
-    printf("Error: %s\n", s);
+    printf("Error: %s", s);
 }
 
 int main() {
-    printf("Enter postfix expressions (e.g., 4 4 -):\n");
+    printf("Enter postfix expressions: ");
     return yyparse();
 }
 `,
@@ -343,9 +343,9 @@ int main() {
 digit   [0-9]
 
 %%
-{digit}+(\.{digit}+)?   { yylval.val = atof(yytext); return NUMBER; }
-[\t ]+                  ; // Ignore whitespace
-\n                      { return '\n'; }
+{digit}+(\.{digit}+)?   { yylval.val = atof(yytext); return NUM; }  // add slash every where, here before the .
+[\ t ]+                  ; // remove Space
+\ n                      { return '\ n'; } // remove Space
 "+"                     { return '+'; }
 "-"                     { return '-'; }
 "*"                     { return '*'; }
@@ -360,7 +360,7 @@ int yywrap() {
 
                 `,
                 input: `
-                %{
+%{
 #include <stdio.h>
 #include <stdlib.h>
 void yyerror(const char *s);
@@ -371,8 +371,8 @@ int yylex();
     double val;
 }
 
-%token <val> NUMBER
-%type <val> expr
+%token <val> NUM
+%type <val> E
 
 %left '+' '-'
 %left '*' '/'
@@ -384,29 +384,29 @@ S: E
     ;
 
 E:
-    '\n'
-    | expr '\n' { printf("Result: %f\n", $1); }
-    | error '\n' { yyerror("Invalid expression, try again."); yyerrok; }
+    '\ n'
+    | E '\ n' { printf("Result: %f \ n", $1); } // remove Space
+    | error '\ n' { yyerror("Invalid expression, try again."); yyerrok; }// remove Space
     ;
 
-expr:
-    NUMBER         { $$ = $1; }
-    | expr '+' expr { $$ = $1 + $3; }
-    | expr '-' expr { $$ = $1 - $3; }
-    | expr '*' expr { $$ = $1 * $3; }
-    | expr '/' expr { if ($3 == 0) { yyerror("Division by zero"); $$ = 0; } else { $$ = $1 / $3; } }
-    | '-' expr %prec UMINUS { $$ = -$2; }
-    | '(' expr ')' { $$ = $2; }
+E:
+    NUM         { $$ = $1; }
+    | E '+' E { $$ = $1 + $3; }
+    | E '-' E { $$ = $1 - $3; }
+    | E '*' E { $$ = $1 * $3; }
+    | E '/' E { if ($3 == 0) { yyerror("Division by zero"); $$ = 0; } else { $$ = $1 / $3; } }
+    | '-' E %prec UMINUS { $$ = -$2; }
+    | '(' E ')' { $$ = $2; }
     ;
 
 %%
 
 void yyerror(const char *s) {
-    fprintf(stderr, "%s\n", s);
+    fprintf(stderr, "%s \ n", s);// remove Space
 }
 
 int main() {
-    printf("Enter expressions for evaluation:\n");
+    printf("Enter expressions for evaluation: \ n");// remove Space
     yyparse();
     return 0;
 }
@@ -416,13 +416,13 @@ int main() {
                 {
                     question: "For Loop Syntax Checking YACC.",
                     code: `
-                    %{
+%{
 #include "y.tab.h"
 %}
 
 %%
 
-"FOR"               { return FOR; }
+"for"               { return FOR; }
 "("                 { return '('; }
 ")"                 { return ')'; }
 ";"                 { return ';'; }
@@ -434,8 +434,8 @@ int main() {
 "<"                 { return '<'; }
 "++"                { return INCR; }
 "+"                 { return '+'; }
-[ \t\n]+            ; // Ignore whitespace
-.                   { printf("Unknown character: %s\n", yytext); }
+[ \ t \ n]+            ;  // remove space
+.                   { printf("Unknown character: %s", yytext); }
 
 %%
 
@@ -445,7 +445,7 @@ int yywrap() {
 
                     `,
                     input: `
-                    %{
+%{
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -458,34 +458,35 @@ int yylex(void);
 
 %%
 
-S: for_loop
+S: FOR
        ;
 
-for_loop: FOR '(' initialization ';' condition ';' increment ')' '{' body '}'
+FOR: FOR '(' i ';' c ';' j ')' '{' body '}'
         {
-            printf("Parsed a simple FOR loop.\n");
+            printf("Parsed a simple FOR loop.");
+            exit(0);
         }
         ;
 
-initialization: ID '=' NUM
+i: ID '=' NUM
               ;
 
-condition: ID '<' NUM
+c: ID '<' NUM
          ;
 
-increment: ID INCR
+j: ID INCR
          ;
 body: ID '=' ID '+' NUM ';';
 
 %%
 
 int main() {
-    printf("Enter a simple FOR loop to parse:\n");
+    printf("Enter a simple FOR loop to parse: ");
     return yyparse();
 }
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Error: %s\n", s);
+    fprintf(stderr, "Error: %s\ n", s); // remove space
 }
 
                     `,
@@ -494,7 +495,7 @@ void yyerror(const char *s) {
                     {
                         question: "Intermediate Code Generation YACC.",
                         code: `
-                        %{
+%{
 #include "y.tab.h"
 #include <string.h>
 %}
@@ -510,7 +511,7 @@ void yyerror(const char *s) {
 "="                     { return '='; }
 "("                     { return '('; }
 ")"                     { return ')'; }
-[ \t\n]+                ; // Ignore whitespace
+[ \ t \ n]+                ;  // remove space
 .                       {  }
 
 %%
@@ -529,16 +530,15 @@ int yywrap() {
 void yyerror(const char *s);
 int yylex();
 
-int temp_count = -1; // Start from -1 to get t0 as the first temp variable
-int stack[100]; // Stack for temporary variables
+int temp_count = -1;
+char* stack[100];
 int top = -1;
 
 void codegen(const char *op);
 void codegen_umin();
 void codegen_assign(char *id);
 void push(char *text);
-void push_temp(int t);
-int pop_temp();
+char* pop();
 
 %}
 
@@ -575,52 +575,59 @@ F: '(' E ')'
 %%
 
 int main() {
-    printf("Enter an arithmetic expression:\n");
+    printf("Enter an arithmetic expression: ");
     return yyparse();
 }
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Error: %s\n", s);
+    fprintf(stderr, "Error: %s \ n", s); // remove space
 }
 
 void push(char *text) {
-    temp_count++;
-    printf("t%d = %s\n", temp_count, text);
-    push_temp(temp_count);
+    stack[++top] = strdup(text);
 }
 
 void codegen(const char *op) {
-    int right = pop_temp();
-    int left = pop_temp();
+    char* right = pop();
+    char* left = pop();
+    
     temp_count++;
-    printf("t%d = t%d %s t%d\n", temp_count, left, op, right);
-    push_temp(temp_count);
+    
+    printf("t%d = %s %s %s \ n", temp_count, left, op, right); // remove space
+    
+    free(left);
+    free(right);
+    
+    char temp[10];
+    snprintf(temp, sizeof(temp), "t%d", temp_count);
+    push(temp);
 }
 
 void codegen_umin() {
-    int val = pop_temp();
+    char* val = pop();
     temp_count++;
-    printf("t%d = -t%d\n", temp_count, val);
-    push_temp(temp_count);
+    
+    printf("t%d = -%s \ n", temp_count, val); // remove space
+    free(val);
+    
+    char temp[10];
+    snprintf(temp, sizeof(temp), "t%d", temp_count);
+    push(temp);
 }
 
 void codegen_assign(char *id) {
-    int val = pop_temp();
-    printf("%s = t%d\n", id, val);
+    char* val = pop();
+    printf("%s = %s \ n", id, val); // remove space
+    free(val);
 }
 
-void push_temp(int t) {
-    stack[++top] = t;
-}
-
-int pop_temp() {
+char* pop() {
     if (top == -1) {
         yyerror("Stack underflow");
         exit(1);
     }
     return stack[top--];
 }
-
                         `,
                         },
 
@@ -664,7 +671,7 @@ int main(int argc, char *argv[]){
     FILE *fp = fopen(argv[1],"r+");
     yyin = fp;
     yylex();
-    printf("count:- %d\n",count);
+    printf("count:- %d",count);
     fclose(fp);
     return 0;
 }
@@ -686,6 +693,108 @@ user@domain#example.com
 first.last@sub.domain.com
 123456@gmail.com
 example+filter@gmail.com
+`,
+        },
+        {
+            question: "Infix to Postfix",
+            code: `
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include "y.tab.h"
+%}
+
+DIGIT [0-9]+
+
+%%
+{DIGIT}  { yylval.str = strdup(yytext); return ID; }
+[-+*/]   { return yytext[0]; }
+[ \ t \ n]  ; //remove space
+.        ;
+
+%%
+
+int yywrap() {
+    return 1;
+}
+
+    `,
+input: `
+%{
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+int yylex();
+void yyerror(const char *s);
+
+void push(char *text);
+char *pop();
+char *top();
+void codegen_infix(char *op);
+
+char *s[100];
+int t = 0;
+
+%}
+
+%union {
+    char *str;
+}
+
+%token <str> ID
+
+%%
+
+S   : E { printf("= %s \ n", top()); } //remove space
+    ;
+
+E   : E E '+' { codegen_infix(" + "); }
+    | E E '-' { codegen_infix(" - "); }
+    | E E '*' { codegen_infix(" * "); }
+    | E E '/' { codegen_infix(" / "); }
+    | ID      { push($1); }
+    ;
+
+%%
+
+void push(char *text) {
+    s[t++] = strdup(text);
+}
+
+char* pop() {
+    return s[--t];
+}
+
+char* top() {
+    return s[t - 1];
+}
+
+void codegen_infix(char* op) {
+    char buffer[100];
+    char *right = pop();
+    char *left = pop();
+    
+    snprintf(buffer, sizeof(buffer), "(%s %s %s)", left, op, right);
+    
+    
+    push(buffer);
+    
+    
+    free(left);
+    free(right);
+}
+
+void yyerror(const char *s) {
+    printf("Error: %s\ n", s); //remove space
+}
+
+int main() {
+    printf("Enter a postfix expression:\ n"); //remove space
+    yyparse();
+    return 0;
+}
+
 `,
         },
     ]
